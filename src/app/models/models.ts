@@ -30,20 +30,21 @@ export interface VerificationResponse {
   autorise: boolean;
   message: string;
   plafond: number;
-  cumulMois: number;
-  motif?: string;
-  agentNom?: string;
-  montantDemande: number;
-  montantRestant: number;
+  cumul: number;
+  montant: number;
+  restant: number;
   pourcentageUtilise: number;
   pourcentageApres: number;
-  dernierTransfert: {
+  transfertId?: number | null;
+  // Champs non (encore) renvoyés par le backend — gardés optionnels pour l'UI.
+  motif?: string;
+  agentNom?: string;
+  dernierTransfert?: {
     nomClient: string;
     dateTransfert: string;
     montant: number;
     statut: string;
   } | null;
-  transfertId?: number | null;
 }
  
 export interface Transfert {
@@ -62,9 +63,12 @@ export interface Transfert {
   dateTransfert: string;
   cumulMois: number;
   motif?: string;
+  partenaireId?: number;
+  agentId?: number;
+  // Le backend renvoie agentId ; le nom de l'agent n'est pas (encore) exposé.
   agentNom?: string;
 }
- 
+
 export interface PlafondClient {
   cumul: number;
   plafond: number;

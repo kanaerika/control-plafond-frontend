@@ -22,10 +22,13 @@ export class ThemeService {
   private themeInitial(): Theme {
     const stocke = localStorage.getItem(CLE_THEME);
     if (stocke === 'clair' || stocke === 'sombre') return stocke;
-    return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'sombre' : 'clair';
+    // Thème clair par défaut (la maquette de l'espace agent est en clair) ;
+    // l'utilisateur peut toujours basculer en sombre, son choix est mémorisé.
+    return 'clair';
   }
 
   private appliquer(theme: Theme): void {
-    document.documentElement.dataset.theme = theme === 'sombre' ? 'dark' : 'light';
+    document.documentElement.dataset['theme'] =
+  theme === 'sombre' ? 'dark' : 'light';
   }
 }

@@ -9,7 +9,7 @@ import { ConfigurationResponse } from '../models/models';
 export class ConfigurationService {
 
   private readonly http = inject(HttpClient);
-  private readonly api = `${environment.apiUrl}/configuration`;
+  private readonly api = `${environment.apiUrl}/v1/configuration`;
 
   lire(): Observable<ConfigurationResponse> {
     return this.http.get<ConfigurationResponse>(this.api);

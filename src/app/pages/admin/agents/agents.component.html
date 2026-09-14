@@ -57,7 +57,6 @@
           <thead>
             <tr>
               <th>Agent</th>
-              <th>Email</th>
               <th>Agence</th>
               <th>Code</th>
               <th>Statut</th>
@@ -70,10 +69,12 @@
                 <td>
                   <div class="cellule-agent">
                     <div class="avatar">{{ a.nomComplet.charAt(0) }}</div>
-                    <span>{{ a.nomComplet }}</span>
+                    <div class="identite">
+                      <span class="nom">{{ a.nomComplet }}</span>
+                      <span class="email" [title]="a.email">{{ a.email }}</span>
+                    </div>
                   </div>
                 </td>
-                <td class="email">{{ a.email }}</td>
                 <td>{{ a.agence || '—' }}</td>
                 <td>{{ a.codeAgent || '—' }}</td>
                 <td>

@@ -10,65 +10,66 @@ import { environment } from '../environment/environment';
 export class TransfertService {
   private readonly http = inject(HttpClient);
   private api = environment.apiUrl;
- 
+
   clientsConnus(q: string) {
-    return this.http.get<ClientConnu[]>(`${this.api}/transferts/clients`,
+    return this.http.get<ClientConnu[]>(`${this.api}/v1/transferts/clients-connus`,
       { params: new HttpParams().set('q', q) });
   }
- 
+
   referentiel() {
-    return this.http.get<Referentiel>(`${this.api}/referentiel`);
+    return this.http.get<Referentiel>(`${this.api}/v1/referentiel`);
   }
- 
+
   verifier(req: VerificationRequest) {
-    return this.http.post<VerificationResponse>(`${this.api}/transferts/verification`, req);
+    return this.http.post<VerificationResponse>(`${this.api}/v1/transferts/verification`, req);
   }
 
   /** Contrôle en lecture seule (sans enregistrement) du plafond déjà atteint par un client. */
   plafondClient(nomClient: string, numeroPiece: string, dateNaissance: string) {
-    return this.http.get<PlafondClient>(`${this.api}/transferts/plafond-client`, {
+    return this.http.get<PlafondClient>(`${this.api}/v1/transferts/plafond-client`, {
       params: new HttpParams()
         .set('nomClient', nomClient)
         .set('numeroPiece', numeroPiece)
         .set('dateNaissance', dateNaissance)
     });
   }
- 
+
   executer(req: VerificationRequest & { reference: string; canal: string; transfertId?: number | null }) {
-    return this.http.post<Transfert>(`${this.api}/transferts`, req);
+    return this.http.post<Transfert>(`${this.api}/v1/transferts/execution`, req);
   }
 
   nonClotures(q = '') {
-    return this.http.get<Transfert[]>(`${this.api}/transferts/non-clotures`,
+    return this.http.get<Transfert[]>(`${this.api}/v1/transferts/non-clotures`,
       { params: new HttpParams().set('q', q) });
   }
 
   cloturer(id: number, reference: string, canal: string) {
-    return this.http.patch<Transfert>(`${this.api}/transferts/${id}/cloture`, { reference, canal });
+    return this.http.post<Transfert>(`${this.api}/v1/transferts/cloture`,
+      { transfertId: id, reference, canal });
   }
- 
+
   historique(q = '') {
-    return this.http.get<Transfert[]>(`${this.api}/transferts`,
+    return this.http.get<Transfert[]>(`${this.api}/v1/transferts/historique`,
       { params: new HttpParams().set('q', q) });
   }
- 
+
   annulables(q = '') {
-    return this.http.get<Transfert[]>(`${this.api}/transferts/annulables`,
+    return this.http.get<Transfert[]>(`${this.api}/v1/transferts/annulables`,
       { params: new HttpParams().set('q', q) });
   }
- 
+
   annuler(id: number, motif: string) {
-    return this.http.patch<Transfert>(`${this.api}/transferts/${id}/annulation`, { motif });
+    return this.http.post<Transfert>(`${this.api}/v1/transferts/${id}/annulation`, { motif });
   }
- 
+
   rejeter(id: number, motif: string) {
-    return this.http.patch<Transfert>(`${this.api}/transferts/${id}/rejet`, { motif });
+    return this.http.post<Transfert>(`${this.api}/v1/transferts/${id}/rejet`, { motif });
   }
- 
+
   bilan() {
-    return this.http.get<Bilan>(`${this.api}/transferts/bilan`);
+    return this.http.get<Bilan>(`${this.api}/v1/transferts/bilan`);
   }
   detail(id: number) {
-    return this.http.get<Transfert>(`${this.api}/transferts/${id}`);
+    return this.http.get<Transfert>(`${this.api}/v1/transferts/${id}`);
   }
 }

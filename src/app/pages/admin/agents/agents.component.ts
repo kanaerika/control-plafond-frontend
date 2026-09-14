@@ -4,8 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
 
+import { KeycloakService } from 'keycloak-angular';
 import { AgentService, AgentRequest } from '../../../services/agent.service';
-import { AuthService } from '../../../services/auth.service';
 import { ToastService } from '../../../core/ui/toast.service';
 import { ConfirmService } from '../../../core/ui/confirm.service';
 import { Agent } from '../../../models/models';
@@ -20,7 +20,7 @@ import { Agent } from '../../../models/models';
 export class AgentsComponent implements OnInit {
 
   private readonly service = inject(AgentService);
-  private readonly auth = inject(AuthService);
+  private readonly keycloak = inject(KeycloakService);
   private readonly toast = inject(ToastService);
   private readonly confirm = inject(ConfirmService);
   private readonly route = inject(ActivatedRoute);
@@ -39,7 +39,11 @@ export class AgentsComponent implements OnInit {
 
   agent: AgentRequest = this.agentVide();
 
-  readonly estAdmin = computed(() => this.auth.role() === 'ADMIN');
+  /** Rôle lu depuis le realm Keycloak (et non plus l'ancien AuthService JWT maison). */
+  readonly estAdmin = signal(
+    this.keycloak.getUserRoles().map(r => r.toLowerCase())
+      .some(r => r === 'admin' || r === 'realm-admin')
+  );
   readonly listeFiltree = computed(() => {
     const q = this.recherche().trim().toLowerCase();
     const statut = this.statutFiltre();
@@ -199,7 +203,9 @@ export class AgentsComponent implements OnInit {
 
   private msg(err: HttpErrorResponse, defaut: string): string {
     if (err.status === 0) return 'Serveur injoignable. Vérifiez votre connexion.';
-    return err.error?.message ?? err.error?.error ?? defaut;
+    // `detail` : réponses ProblemDetail (RFC 7807) du backend ; `message` :
+    // réponses d'erreur Spring Boot par défaut.
+    return err.error?.detail ?? err.error?.message ?? err.error?.error ?? defaut;
   }
 
   classeStatut(a: Agent): string {

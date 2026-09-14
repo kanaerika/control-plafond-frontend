@@ -6,106 +6,22 @@
       <h2>{{ nomComplet() || 'Utilisateur' }}</h2>
       <p class="role">{{ libelleRole() }}</p>
       <ul class="details">
-        <li><span>Code agent</span><strong>{{ codeAgent() }}</strong></li>
+        <li><span>Agence</span><strong>{{ agence() }}</strong></li>
+        <li><span>Email</span><strong>{{ email() || '—' }}</strong></li>
         <li><span>Institution</span><strong>{{ partenaireNom() }}</strong></li>
       </ul>
     </div>
   </div>
 
   <div class="carte carte-mdp">
-    <h3>Changer mon mot de passe</h3>
-    <p class="aide">Votre ancien mot de passe est requis pour confirmer le changement.</p>
-
-    @if (succes()) {
-      <div class="ok" role="status">✓ Mot de passe modifié avec succès.</div>
-    }
-    @if (erreur()) {
-      <div class="alerte" role="alert">{{ erreur() }}</div>
-    }
-
-    <div class="champ">
-      <label for="ancien">Mot de passe actuel</label>
-      <div class="saisie">
-        <input
-          id="ancien"
-          name="ancien"
-          [type]="afficherAncien() ? 'text' : 'password'"
-          [ngModel]="ancien()"
-          (ngModelChange)="ancien.set($event)"
-          autocomplete="current-password"
-          placeholder="••••••••"
-          [disabled]="enCours()">
-        <button type="button" class="oeil" (click)="afficherAncien.set(!afficherAncien())"
-                [attr.aria-label]="afficherAncien() ? 'Masquer' : 'Afficher'">
-          {{ afficherAncien() ? '🙈' : '👁' }}
-        </button>
-      </div>
-    </div>
-
-    <div class="champ">
-      <label for="nouveau">Nouveau mot de passe</label>
-      <div class="saisie">
-        <input
-          id="nouveau"
-          name="nouveau"
-          [type]="afficherNouveau() ? 'text' : 'password'"
-          [ngModel]="nouveau()"
-          (ngModelChange)="nouveau.set($event)"
-          autocomplete="new-password"
-          placeholder="••••••••"
-          [disabled]="enCours()">
-        <button type="button" class="oeil" (click)="afficherNouveau.set(!afficherNouveau())"
-                [attr.aria-label]="afficherNouveau() ? 'Masquer' : 'Afficher'">
-          {{ afficherNouveau() ? '🙈' : '👁' }}
-        </button>
-      </div>
-
-      @if (nouveau()) {
-        <ul class="criteres">
-          @for (c of criteres(); track c.libelle) {
-            <li [class.ok]="c.valide">
-              <span class="puce">{{ c.valide ? '✓' : '○' }}</span>{{ c.libelle }}
-            </li>
-          }
-        </ul>
-      }
-    </div>
-
-    <div class="champ">
-      <label for="confirmation">Confirmer le nouveau mot de passe</label>
-      <div class="saisie">
-        <input
-          id="confirmation"
-          name="confirmation"
-          [type]="afficherConfirmation() ? 'text' : 'password'"
-          [ngModel]="confirmation()"
-          (ngModelChange)="confirmation.set($event)"
-          (keyup.enter)="soumettre()"
-          autocomplete="new-password"
-          placeholder="••••••••"
-          [class.invalide]="correspondance() === false"
-          [class.valide]="correspondance() === true"
-          [disabled]="enCours()">
-        <button type="button" class="oeil" (click)="afficherConfirmation.set(!afficherConfirmation())"
-                [attr.aria-label]="afficherConfirmation() ? 'Masquer' : 'Afficher'">
-          {{ afficherConfirmation() ? '🙈' : '👁' }}
-        </button>
-      </div>
-      @if (correspondance() === false) {
-        <p class="aide erreur-aide">Les mots de passe ne correspondent pas.</p>
-      }
-    </div>
-
-    <button
-      type="button"
-      class="bouton-principal"
-      [disabled]="!formulaireValide() || enCours()"
-      (click)="soumettre()">
-      @if (enCours()) {
-        <span class="mini-spinner" aria-hidden="true"></span> Enregistrement…
-      } @else {
-        Enregistrer le nouveau mot de passe
-      }
+    <h3>Mot de passe</h3>
+    <p class="aide">
+      Votre mot de passe est géré par le service d'authentification Afriland (Keycloak).
+      Le bouton ci-dessous ouvre sa page sécurisée « Modifier le mot de passe »,
+      puis vous ramène à l'application.
+    </p>
+    <button type="button" class="bouton-principal" (click)="ouvrirGestionMotDePasse()">
+      Modifier mon mot de passe
     </button>
   </div>
 

@@ -9,7 +9,7 @@ import { ProfilResponse } from '../models/models';
 export class ProfilService {
 
   private readonly http = inject(HttpClient);
-  private readonly api = `${environment.apiUrl}/profil`;
+  private readonly api = `${environment.apiUrl}/v1/profil`;
 
   consulter(): Observable<ProfilResponse> {
     return this.http.get<ProfilResponse>(this.api);

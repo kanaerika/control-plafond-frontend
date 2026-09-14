@@ -160,6 +160,63 @@
   color: var(--gris-texte);
 }
 
+/* ---- Formulaire de choix du mot de passe ---- */
+
+.formulaire {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  margin-top: 20px;
+}
+
+.formulaire label {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--noir, #1A1A1A);
+}
+
+.formulaire input {
+  padding: 12px 14px;
+  border: 1px solid var(--gris-bordure, #E3E5E8);
+  border-radius: 9px;
+  font-size: 14.5px;
+  font-family: inherit;
+  background: var(--surface, #FFFFFF);
+  color: inherit;
+}
+
+.formulaire input:focus {
+  outline: none;
+  border-color: var(--rouge-afb);
+  box-shadow: 0 0 0 3px rgba(200, 16, 46, .12);
+}
+
+.formulaire input:disabled { opacity: .6; cursor: not-allowed; }
+
+.formulaire small {
+  font-size: 12px;
+  color: var(--gris-texte);
+  margin: 6px 0 16px;
+}
+
+.formulaire label + input + small { margin-bottom: 16px; }
+.formulaire input + label { margin-top: 16px; }
+
+.erreur-formulaire {
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(200, 16, 46, .08);
+  border-left: 3px solid var(--rouge-afb);
+  font-size: 13px;
+  color: var(--rouge-afb);
+}
+
+.formulaire .bouton { margin-top: 20px; }
+
+.formulaire .bouton:disabled { opacity: .65; cursor: not-allowed; }
+
 /* ---- Boutons ---- */
 
 .bouton {

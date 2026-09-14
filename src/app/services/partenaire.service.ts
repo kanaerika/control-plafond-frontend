@@ -12,7 +12,7 @@ export class PartenaireService {
 
   private readonly http = inject(HttpClient);
 
-  private readonly api = environment.apiUrl + '/superadmin/partenaires';
+  private readonly api = environment.apiUrl + '/v1/partenaires';
 
   getAll(): Observable<Partenaire[]> {
     return this.http.get<Partenaire[]>(this.api);

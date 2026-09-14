@@ -17,7 +17,7 @@ export interface AgentRequest {
 export class AgentService {
 
   private readonly http = inject(HttpClient);
-  private readonly api = `${environment.apiUrl}/partenaire/agents`;
+  private readonly api = `${environment.apiUrl}/v1/agents`;
 
   // Le partenaire est déduit du JWT côté backend : aucun id à transmettre.
 

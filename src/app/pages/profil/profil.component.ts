@@ -1,30 +1,30 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { HttpErrorResponse } from '@angular/common/http';
 
-import { AuthService } from '../../services/auth.service';
-
-interface Critere {
-  libelle: string;
-  valide: boolean;
-}
+import { KeycloakService } from 'keycloak-angular';
+import { ProfilService } from '../../services/profil.service';
+import { ProfilResponse } from '../../models/models';
 
 @Component({
   selector: 'app-profil',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule],
   templateUrl: './profil.component.html',
   styleUrl: './profil.component.css'
 })
-export class ProfilComponent {
+export class ProfilComponent implements OnInit {
 
-  private readonly auth = inject(AuthService);
+  private readonly keycloak = inject(KeycloakService);
+  private readonly profilService = inject(ProfilService);
 
-  readonly nomComplet = computed(() => this.auth.agent?.nomComplet ?? '');
-  readonly codeAgent = computed(() => this.auth.agent?.codeAgent ?? '—');
-  readonly role = computed(() => this.auth.agent?.role ?? '');
-  readonly partenaireNom = computed(() => this.auth.agent?.partenaireNom ?? 'Afriland First Bank');
+  /** Identité résolue via /v1/profil (claim email du JWT Keycloak côté backend). */
+  private readonly profil = signal<ProfilResponse | null>(null);
+
+  readonly nomComplet = computed(() => this.profil()?.nomComplet ?? '');
+  readonly role = computed(() => this.profil()?.role ?? '');
+  readonly partenaireNom = computed(() => this.profil()?.partenaireNom ?? 'Afriland First Bank');
+  readonly agence = computed(() => this.profil()?.agence ?? '—');
+  readonly email = computed(() => this.profil()?.email ?? '');
 
   readonly libelleRole = computed(() => {
     switch (this.role()) {
@@ -34,64 +34,19 @@ export class ProfilComponent {
     }
   });
 
-  readonly ancien = signal('');
-  readonly nouveau = signal('');
-  readonly confirmation = signal('');
-  readonly afficherAncien = signal(false);
-  readonly afficherNouveau = signal(false);
-  readonly afficherConfirmation = signal(false);
-  readonly enCours = signal(false);
-  readonly erreur = signal<string | null>(null);
-  readonly succes = signal(false);
-
-  readonly criteres = computed<Critere[]>(() => {
-    const mdp = this.nouveau();
-    return [
-      { libelle: 'Au moins 8 caractères', valide: mdp.length >= 8 },
-      { libelle: 'Au moins une lettre',   valide: /[a-zA-Z]/.test(mdp) },
-      { libelle: 'Au moins un chiffre',   valide: /\d/.test(mdp) }
-    ];
-  });
-
-  readonly criteresValides = computed(() => this.criteres().every(c => c.valide));
-
-  readonly correspondance = computed(() => {
-    const c = this.confirmation();
-    return c.length === 0 ? null : this.nouveau() === c;
-  });
-
-  readonly formulaireValide = computed(() =>
-    this.ancien().length > 0 && this.criteresValides() && this.correspondance() === true
-  );
-
-  soumettre(): void {
-    if (!this.formulaireValide() || this.enCours()) return;
-
-    this.enCours.set(true);
-    this.erreur.set(null);
-    this.succes.set(false);
-
-    this.auth.changerMotDePasse({
-      ancienMotDePasse: this.ancien(),
-      nouveauMotDePasse: this.nouveau(),
-      confirmationMotDePasse: this.confirmation()
-    }).subscribe({
-      next: () => {
-        this.enCours.set(false);
-        this.succes.set(true);
-        this.ancien.set('');
-        this.nouveau.set('');
-        this.confirmation.set('');
-      },
-      error: (err: HttpErrorResponse) => {
-        this.enCours.set(false);
-        this.erreur.set(this.extraireMessage(err));
-      }
+  ngOnInit(): void {
+    this.profilService.consulter().subscribe({
+      next: p => this.profil.set(p),
+      error: () => this.profil.set(null)
     });
   }
 
-  private extraireMessage(err: HttpErrorResponse): string {
-    if (err.status === 0) return 'Serveur injoignable. Vérifiez votre connexion.';
-    return err.error?.message ?? err.error?.error ?? 'Une erreur est survenue. Réessayez.';
+  /**
+   * Le mot de passe est géré par Keycloak : on ouvre sa page hébergée
+   * « Update Password » plutôt qu'un formulaire maison (l'endpoint
+   * /api/auth/changer-mot-de-passe n'existe plus).
+   */
+  ouvrirGestionMotDePasse(): void {
+    this.keycloak.login({ action: 'UPDATE_PASSWORD' });
   }
 }

@@ -1,7 +1,10 @@
 import { Component, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { AuthService } from '../../../services/auth.service';
+import { KeycloakService } from 'keycloak-angular';
+import { ProfilService } from '../../../services/profil.service';
 import { ThemeService } from '../../../core/theme/theme.service';
+
+const PARTENAIRE_AFRILAND = 'Afriland First Bank';
 
 const CLE_TAILLE_TEXTE = 'admin-taille-texte';
 const TAILLE_MIN = 90;
@@ -22,13 +25,28 @@ const TAILLE_DEFAUT = 110;
 })
 export class AdminLayoutComponent {
 
-  private readonly auth = inject(AuthService);
+  private readonly keycloak = inject(KeycloakService);
+  private readonly profilService = inject(ProfilService);
   private readonly router = inject(Router);
   readonly theme = inject(ThemeService);
 
-  /** Seul l'admin Afriland onboarde d'autres partenaires ; tous les admins gèrent leurs agents. */
+  /**
+   * Seul l'admin du partenaire Afriland First Bank onboarde d'autres
+   * partenaires ; un admin d'un autre partenaire a le même rôle Keycloak
+   * "ADMIN" — la distinction se fait donc sur le partenaire d'appartenance
+   * (résolu via /v1/profil), pas sur le rôle. Même logique que afrilandGuard.
+   */
+  private readonly partenaireNom = signal<string | null>(null);
+
+  constructor() {
+    this.profilService.consulter().subscribe({
+      next: p => this.partenaireNom.set(p.partenaireNom),
+      error: () => this.partenaireNom.set(null)
+    });
+  }
+
   get estAdminAfriland(): boolean {
-    return this.auth.estAdminAfriland();
+    return this.partenaireNom() === PARTENAIRE_AFRILAND;
   }
 
   // ---- Menu latéral repliable (bouton hamburger) ----
@@ -92,6 +110,9 @@ export class AdminLayoutComponent {
   }
 
   deconnexion(): void {
-    this.auth.deconnexion();
+    // keycloak.logout() termine la session Keycloak elle-même : sans ça, la
+    // session SSO reste active et LoginComponent renvoie aussitôt
+    // l'utilisateur sur /admin/dashboard au prochain accès à /connexion.
+    this.keycloak.logout(window.location.origin);
   }
 }

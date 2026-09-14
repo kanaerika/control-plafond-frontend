@@ -1,7 +1,7 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
+import { KeycloakService } from 'keycloak-angular';
 import { TraductionService } from '../../core/traduction/traduction.service';
 
 @Component({
@@ -50,36 +50,13 @@ import { TraductionService } from '../../core/traduction/traduction.service';
             [(ngModel)]="email"
             type="email"
             autocomplete="email"
-            placeholder="nom@entreprise.com">
-        </div>
-
-        <label for="champ-mdp-connexion">{{ tr.t('login.mdp') }}</label>
-        <div class="fld m10">
-          <span class="ic">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          </span>
-          <input
-            id="champ-mdp-connexion"
-            class="fin avec-oeil"
-            [(ngModel)]="motDePasse"
-            [type]="mdpVisible ? 'text' : 'password'"
-            autocomplete="current-password"
-            placeholder="••••••••"
+            placeholder="nom@entreprise.com"
             (keyup.enter)="connexion()">
-          <button type="button" class="oeil" (click)="mdpVisible = !mdpVisible" [attr.aria-label]="mdpVisible ? tr.t('login.masquerMdp') : tr.t('login.afficherMdp')">
-            @if (mdpVisible) {
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.86 21.86 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.86 21.86 0 0 1-3.22 4.44M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-            } @else {
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            }
-          </button>
         </div>
 
-        <div class="ligne">
-          <label class="souvenir">
-            <input type="checkbox" checked> {{ tr.t('login.souvenir') }}
-          </label>
-        </div>
+        <p class="desc-carte" style="margin:-6px 0 18px;">
+          Vous serez redirigé vers la page de connexion sécurisée pour saisir votre mot de passe.
+        </p>
 
         @if (erreur) {
           <div class="err">{{ erreur }}</div>
@@ -99,7 +76,7 @@ import { TraductionService } from '../../core/traduction/traduction.service';
 
         <div class="pied-carte">
           <a routerLink="/">{{ tr.t('login.retourAccueil') }}</a>
-          <a routerLink="/mot-de-passe-oublie">{{ tr.t('login.oubli') }}</a>
+          <a class="lien-oubli" (click)="motDePasseOublie()">{{ tr.t('login.oubli') }}</a>
         </div>
 
         <div class="copyright-carte">{{ tr.t('commun.copyright') }}</div>
@@ -156,7 +133,7 @@ import { TraductionService } from '../../core/traduction/traduction.service';
     @keyframes tourne { to { transform:rotate(360deg); } }
 
     .pied-carte { display:flex; justify-content:space-between; align-items:center; margin-top:20px; padding-top:18px; border-top:1px solid var(--bordure); }
-    .pied-carte a { font-size:12.5px; font-weight:700; color:var(--gris); }
+    .pied-carte a { font-size:12.5px; font-weight:700; color:var(--gris); cursor:pointer; }
     .pied-carte a:hover { color:var(--rouge); }
 
     .copyright-carte { text-align:center; margin-top:16px; font-size:11.5px; color:var(--texte-faible); }
@@ -173,43 +150,56 @@ import { TraductionService } from '../../core/traduction/traduction.service';
     }
   `]
 })
-export class LoginComponent {
-  private readonly auth = inject(AuthService);
+export class LoginComponent implements OnInit {
+  private readonly keycloak = inject(KeycloakService);
   private readonly router = inject(Router);
   readonly tr = inject(TraductionService);
 
   email = '';
-  motDePasse = '';
   erreur = '';
   chargement = false;
-  mdpVisible = false;
+
+  ngOnInit(): void {
+    // Keycloak renvoie ici (redirectUri = /connexion) après un login réussi.
+    // Sans cette vérification, un utilisateur déjà authentifié resterait
+    // bloqué sur le formulaire de connexion au lieu d'atteindre son espace.
+    if (this.keycloak.isLoggedIn()) {
+      this.router.navigate([this.routeAccueil()]);
+    }
+  }
+
+  private routeAccueil(): string {
+    const roles = this.keycloak.getUserRoles().map(r => r.toLowerCase());
+    const isAdmin = roles.includes('admin') || roles.includes('realm-admin');
+    return isAdmin ? '/admin/dashboard' : '/app/verification';
+  }
 
   connexion(): void {
 
-    if (!this.email.trim() || !this.motDePasse.trim()) {
-      this.erreur = this.tr.t('login.erreurChampsRequis');
+    if (!this.email.trim()) {
+      this.erreur = "Veuillez renseigner votre adresse e-mail.";
       return;
     }
 
     this.erreur = '';
     this.chargement = true;
 
-    this.auth.login(this.email, this.motDePasse).subscribe({
-
-      next: () => {
-        this.chargement = false;
-        // routeAccueil() gère tout : /change-password si firstLogin,
-        // sinon /admin/dashboard ou /app/verification selon le rôle.
-        this.router.navigate([this.auth.routeAccueil()]);
-      },
-      error: err => {
-        this.erreur =
-          err?.error?.message ??
-          this.tr.t('login.erreurIdentifiants');
-        this.chargement = false;
-      }
-
+    // L'authentification est déléguée à Keycloak : le mot de passe n'est plus
+    // saisi ici. On redirige vers l'écran de connexion Keycloak en pré-remplissant
+    // l'email (loginHint).
+    this.keycloak.login({ loginHint: this.email }).catch(() => {
+      this.chargement = false;
+      this.erreur = "Impossible de contacter le service d'authentification.";
     });
+  }
 
+  /**
+   * La réinitialisation du mot de passe est gérée par Keycloak (lien
+   * « Forgot Password ? » de sa page de connexion — le realm autorise
+   * resetPasswordAllowed). On y redirige en pré-remplissant l'email s'il est
+   * saisi ; l'ancien flux OTP maison (/api/auth/**) n'existe plus.
+   */
+  motDePasseOublie(): void {
+    this.keycloak.login(this.email.trim() ? { loginHint: this.email.trim() } : {});
   }
 }

@@ -3,9 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 
+import { KeycloakService } from 'keycloak-angular';
 import { ProfilService } from '../../../services/profil.service';
 import { ConfigurationService } from '../../../services/configuration.service';
-import { AuthService } from '../../../services/auth.service';
 import { ToastService } from '../../../core/ui/toast.service';
 import { ConfirmService } from '../../../core/ui/confirm.service';
 import { ProfilResponse, ConfigurationResponse } from '../../../models/models';
@@ -23,29 +23,30 @@ export class ParametresComponent implements OnInit {
 
   private readonly profilService = inject(ProfilService);
   private readonly configService = inject(ConfigurationService);
-  private readonly auth = inject(AuthService);
+  private readonly keycloak = inject(KeycloakService);
   private readonly toast = inject(ToastService);
   private readonly confirm = inject(ConfirmService);
 
   readonly onglet = signal<Onglet>('profil');
-  readonly estAdmin = computed(() => this.auth.role() === 'ADMIN');
-  /** Le plafond est partagé par tous les partenaires : seul l'admin Afriland le configure. */
-  readonly estAdminAfriland = computed(() => this.auth.estAdminAfriland());
+  /** Rôle lu depuis le realm Keycloak. */
+  readonly estAdmin = signal(
+    this.keycloak.getUserRoles().map(r => r.toLowerCase())
+      .some(r => r === 'admin' || r === 'realm-admin')
+  );
+  /**
+   * Le plafond est partagé par tous les partenaires : seul l'admin du partenaire
+   * fondateur (Afriland) le configure. La distinction se fait sur le partenaire
+   * d'appartenance (résolu via /v1/profil), pas sur un rôle Keycloak.
+   */
+  readonly estAdminAfriland = computed(() =>
+    this.estAdmin()
+      && (this.profil()?.partenaireNom ?? '').trim().toLowerCase() === 'afriland first bank'
+  );
 
   // ---- Profil ----
   readonly profil = signal<ProfilResponse | null>(null);
   formProfil = { nomComplet: '', email: '', agence: '' };
   readonly sauvProfil = signal(false);
-
-  // ---- Sécurité ----
-  mdp = { ancien: '', nouveau: '', confirmation: '' };
-  readonly changementMdp = signal(false);
-  readonly correspondance = computed(() =>
-    this.mdp.confirmation ? this.mdp.nouveau === this.mdp.confirmation : null);
-  readonly mdpValide = computed(() =>
-    !!this.mdp.ancien && this.mdp.nouveau.length >= 8 &&
-    /[a-zA-Z]/.test(this.mdp.nouveau) && /\d/.test(this.mdp.nouveau) &&
-    this.correspondance() === true);
 
   // ---- Plafond ----
   readonly config = signal<ConfigurationResponse | null>(null);
@@ -57,16 +58,16 @@ export class ParametresComponent implements OnInit {
       next: p => {
         this.profil.set(p);
         this.formProfil = { nomComplet: p.nomComplet, email: p.email, agence: p.agence ?? '' };
+        // estAdminAfriland dépend du profil : on charge la config une fois qu'il est connu.
+        if (this.estAdminAfriland()) {
+          this.configService.lire().subscribe({
+            next: c => { this.config.set(c); this.plafondSaisi.set(c.plafondMensuel); },
+            error: () => this.toast.erreur('Impossible de charger la configuration.')
+          });
+        }
       },
       error: () => this.toast.erreur('Impossible de charger le profil.')
     });
-
-    if (this.estAdminAfriland()) {
-      this.configService.lire().subscribe({
-        next: c => { this.config.set(c); this.plafondSaisi.set(c.plafondMensuel); },
-        error: () => this.toast.erreur('Impossible de charger la configuration.')
-      });
-    }
   }
 
   // ---- Profil ----
@@ -80,21 +81,13 @@ export class ParametresComponent implements OnInit {
   }
 
   // ---- Sécurité ----
-  changerMotDePasse(): void {
-    if (!this.mdpValide() || this.changementMdp()) return;
-    this.changementMdp.set(true);
-    this.auth.changerMotDePasse({
-      ancienMotDePasse: this.mdp.ancien,
-      nouveauMotDePasse: this.mdp.nouveau,
-      confirmationMotDePasse: this.mdp.confirmation
-    }).subscribe({
-      next: () => {
-        this.changementMdp.set(false);
-        this.mdp = { ancien: '', nouveau: '', confirmation: '' };
-        this.toast.succes('Mot de passe modifié.');
-      },
-      error: (e: HttpErrorResponse) => { this.changementMdp.set(false); this.toast.erreur(this.msg(e)); }
-    });
+  /**
+   * L'authentification est déléguée à Keycloak : le changement de mot de passe
+   * se fait sur sa page « Update Password » hébergée, pas via un endpoint maison
+   * (l'ancien /api/auth/changer-mot-de-passe n'existe plus).
+   */
+  ouvrirGestionMotDePasse(): void {
+    this.keycloak.login({ action: 'UPDATE_PASSWORD' });
   }
 
   // ---- Plafond ----

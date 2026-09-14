@@ -222,7 +222,8 @@ export class PartenairesComponent implements OnInit {
       action: () => {
         this.service.renvoyerInvitation(p.id!).subscribe({
           next: () => this.notifier('success', `Invitation envoyée à « ${p.nom} » avec succès.`),
-          error: (err: any) => this.notifier('error', err?.error?.message ?? "Échec de l'envoi de l'invitation.")
+          error: (err: any) => this.notifier('error',
+            err?.error?.detail ?? err?.error?.message ?? "Échec de l'envoi de l'invitation.")
         });
       }
     });

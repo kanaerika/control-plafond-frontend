@@ -254,7 +254,7 @@ import { ConfirmService } from '../../core/ui/confirm.service';
             <div class="jhaut">
               <div>
                 <div class="jl">{{ tr.t('verif.montantTransferable') }}</div>
-                <div class="disp jv">{{ fmt(r.montantRestant) }}<span> FCFA</span></div>
+                <div class="disp jv">{{ fmt(r.restant) }}<span> FCFA</span></div>
               </div>
               <div class="jplafond">
                 <div class="jl2">{{ tr.t('verif.plafond') }}</div>
@@ -268,7 +268,7 @@ import { ConfirmService } from '../../core/ui/confirm.service';
             <div class="jbas">
               <div class="legende">
                 <span class="carre" [style.background]="couleur"></span>
-                {{ tr.t('verif.dejaUtilise') }} {{ fmt(r.cumulMois) }}
+                {{ tr.t('verif.dejaUtilise') }} {{ fmt(r.cumul) }}
               </div>
               <span class="pct" [style.color]="couleur">{{ tr.t('verif.pctPlafond', { pct: r.pourcentageUtilise }) }}</span>
             </div>
@@ -741,19 +741,40 @@ export class VerificationComponent implements OnInit {
   }
 
   /**
-   * Appelé par le garde de navigation (canDeactivate) : tant que la vérification est autorisée
-   * mais pas encore exécutée, on empêche de quitter la page sans confirmer ou justifier l'abandon.
+   * Appelé par le garde de navigation (canDeactivate). Un pop-up prévient l'agent
+   * dès qu'un transfert est commencé mais pas terminé :
+   *  - vérification autorisée, pas encore exécutée → transfert réservé côté serveur :
+   *    confirmation + justification d'abandon obligatoire (rejette la réservation) ;
+   *  - récapitulatif en cours (formulaire rempli, non vérifié) → simple confirmation,
+   *    les saisies non enregistrées seront perdues.
    */
   async peutQuitter(): Promise<boolean> {
-    if (!this.resultat?.autorise || this.transfertExecute) return true;
-    const continuer = await this.confirm.demander({
-      titre: this.tr.t('verif.quitterTitre'),
-      message: this.tr.t('verif.quitterMessage'),
-      texteConfirmer: this.tr.t('verif.quitterContinuer'),
-      texteAnnuler: this.tr.t('commun.annuler')
-    });
-    if (continuer) return false; // reste sur la page, transfert toujours en cours
-    return this.demanderMotifAnnulation();
+    // Transfert terminé (reçu affiché) : rien à retenir.
+    if (this.transfertExecute) return true;
+
+    // Vérification autorisée mais non exécutée : transfert réservé côté serveur.
+    if (this.resultat?.autorise) {
+      const continuer = await this.confirm.demander({
+        titre: this.tr.t('verif.quitterTitre'),
+        message: this.tr.t('verif.quitterMessage'),
+        texteConfirmer: this.tr.t('verif.quitterContinuer'),
+        texteAnnuler: this.tr.t('commun.annuler')
+      });
+      if (continuer) return false; // reste sur la page, transfert toujours en cours
+      return this.demanderMotifAnnulation();
+    }
+
+    // Récapitulatif en cours : opération commencée, non enregistrée.
+    if (this.recap) {
+      return this.confirm.demander({
+        titre: this.tr.t('verif.quitterTitre'),
+        message: this.tr.t('verif.quitterBrouillonMessage'),
+        texteConfirmer: this.tr.t('verif.quitterQuandMeme'),
+        texteAnnuler: this.tr.t('commun.annuler')
+      });
+    }
+
+    return true;
   }
 
   /** Bouton « Annuler » à côté de « Soumettre » : mêmes règles, sans navigation. */

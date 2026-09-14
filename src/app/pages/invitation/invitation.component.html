@@ -19,6 +19,45 @@
       </div>
     }
 
+    <!-- Choix du mot de passe -->
+    @if (etat() === 'formulaire') {
+      <div class="contenu">
+        <h2>Choisissez votre mot de passe</h2>
+        <p class="texte">Vous vous connecterez avec <strong>{{ email() }}</strong>.</p>
+
+        <form class="formulaire" (ngSubmit)="valider()">
+          <label for="champ-mdp">Mot de passe</label>
+          <input
+            id="champ-mdp"
+            type="password"
+            name="motDePasse"
+            autocomplete="new-password"
+            [(ngModel)]="motDePasse"
+            [disabled]="enCours()"
+            required>
+          <small>Au moins 8 caractères.</small>
+
+          <label for="champ-confirmation">Confirmez le mot de passe</label>
+          <input
+            id="champ-confirmation"
+            type="password"
+            name="confirmation"
+            autocomplete="new-password"
+            [(ngModel)]="confirmation"
+            [disabled]="enCours()"
+            required>
+
+          @if (message()) {
+            <p class="erreur-formulaire" role="alert">{{ message() }}</p>
+          }
+
+          <button type="submit" class="bouton bouton-principal" [disabled]="enCours()">
+            {{ enCours() ? 'Enregistrement…' : 'Activer mon compte' }}
+          </button>
+        </form>
+      </div>
+    }
+
     <!-- Succès -->
     @if (etat() === 'succes') {
       <div class="contenu">
@@ -29,14 +68,14 @@
           </svg>
         </div>
 
-        <h2>Invitation validée</h2>
+        <h2>Compte activé</h2>
         <p class="texte">{{ message() }}</p>
 
         <div class="encadre">
           <strong>Prochaine étape</strong>
           <p>
-            Connectez-vous avec le <strong>mot de passe temporaire</strong>
-            reçu par email. Vous devrez ensuite choisir votre propre mot de passe.
+            Connectez-vous avec <strong>{{ email() }}</strong> et le mot de passe
+            que vous venez de choisir.
           </p>
         </div>
 
@@ -67,7 +106,7 @@
           <strong>Que faire ?</strong>
           <p>
             Contactez votre administrateur pour recevoir une nouvelle invitation.
-            Un lien reste valable 72 heures et ne peut servir qu'une seule fois.
+            Un lien reste valable 48 heures et ne peut servir qu'une seule fois.
           </p>
         </div>
 
