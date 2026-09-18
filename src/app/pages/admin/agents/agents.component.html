@@ -106,8 +106,9 @@
 
 <!-- Modal création / édition -->
 @if (afficherModal()) {
-  <div class="voile" (click)="fermerModal()">
-    <div class="modal" (click)="$event.stopPropagation()">
+  <div class="voile" tabindex="-1"
+       (click)="fermerSiFond($event)" (keydown.escape)="fermerModal()">
+    <div class="modal">
 
       <div class="modal-entete">
         <h2>{{ edition() ? 'Modifier l\'agent' : 'Nouvel agent' }}</h2>

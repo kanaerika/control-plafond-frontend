@@ -4,7 +4,6 @@ import { ActivatedRoute } from '@angular/router';
 import { TransfertService } from '../../services/transfert.service';
 import { Transfert } from '../../models/models';
 import { imprimerBordereau } from '../../core/bordereau';
-import { TraductionService } from '../../core/traduction/traduction.service';
 import { ToastService } from '../../core/ui/toast.service';
  
 type Mode = 'historique' | 'annulation' | 'non-cloture';
@@ -283,10 +282,17 @@ export class ListeComponent implements OnInit {
     this.charger();
   }
 
+  /** Un mode = un endpoint. Ternaire imbrique remplace par une correspondance explicite. */
+  private fluxDuMode() {
+    switch (this.mode) {
+      case 'annulation':  return this.transferts_.annulables(this.recherche);
+      case 'non-cloture': return this.transferts_.nonClotures(this.recherche);
+      default:            return this.transferts_.historique(this.recherche);
+    }
+  }
+
   charger(): void {
-    const flux = this.mode === 'annulation' ? this.transferts_.annulables(this.recherche)
-      : this.mode === 'non-cloture' ? this.transferts_.nonClotures(this.recherche)
-      : this.transferts_.historique(this.recherche);
+    const flux = this.fluxDuMode();
 
     flux.subscribe({
       next: liste => { this.transferts = liste; },

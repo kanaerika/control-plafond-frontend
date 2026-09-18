@@ -112,6 +112,15 @@ export class AgentsComponent implements OnInit {
     this.erreur.set('');
   }
 
+  /**
+   * Ferme uniquement si le clic vise le voile lui-même. Remplaçe le
+   * stopPropagation() posé sur le contenu : un gestionnaire de clic sur le
+   * modal en faisait une fausse commande, inatteignable au clavier.
+   */
+  fermerSiFond(evenement: Event): void {
+    if (evenement.target === evenement.currentTarget) this.fermerModal();
+  }
+
   enregistrer(): void {
     if (this.enregistrementEnCours()) return;
 

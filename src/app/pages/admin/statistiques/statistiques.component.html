@@ -20,7 +20,10 @@
     <!-- KPI cards -->
     <div class="grille-kpi">
       @for (k of d.kpis; track k.libelle) {
-        <div class="carte-kpi carte-kpi-clic" (click)="ouvrirKpi(k.libelle)">
+        <div class="carte-kpi carte-kpi-clic" role="button" tabindex="0"
+             (click)="ouvrirKpi(k.libelle)"
+             (keydown.enter)="ouvrirKpi(k.libelle)"
+             (keydown.space)="$event.preventDefault(); ouvrirKpi(k.libelle)">
           <div class="kpi-ic" [class]="varianteClasse(k.variante)">
             @switch (iconeKpi(k.libelle)) {
               @case ('agents') { <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> }
@@ -59,7 +62,11 @@
             <ul class="legende">
               @for (p of partsAvecPourcentage(); track p.libelle) {
                 <li class="legende-clic" [class.legende-active]="filtreStatutActivite() === p.libelle"
-                    (click)="basculerFiltreActivite(p.libelle)">
+                    role="button" tabindex="0"
+                    [attr.aria-pressed]="filtreStatutActivite() === p.libelle"
+                    (click)="basculerFiltreActivite(p.libelle)"
+                    (keydown.enter)="basculerFiltreActivite(p.libelle)"
+                    (keydown.space)="$event.preventDefault(); basculerFiltreActivite(p.libelle)">
                   <span class="pastille" [style.background]="p.couleur"></span>
                   <span class="leg-libelle">{{ p.libelle }}</span>
                   <span class="leg-pct">{{ p.pourcentage }} %</span>
@@ -135,7 +142,10 @@
             </thead>
             <tbody>
               @for (t of activiteFiltree(); track t.id) {
-                <tr class="ligne-activite" (click)="voirTransfert(t.id)">
+                <tr class="ligne-activite" tabindex="0"
+                    (click)="voirTransfert(t.id)"
+                    (keydown.enter)="voirTransfert(t.id)"
+                    (keydown.space)="$event.preventDefault(); voirTransfert(t.id)">
                   <td class="col-ref">{{ reference(t.id) }}</td>
                   <td>{{ t.nomClient }}</td>
                   <td>{{ formatMontant(t.montant) }}</td>

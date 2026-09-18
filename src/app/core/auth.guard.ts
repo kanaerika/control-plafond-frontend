@@ -24,17 +24,10 @@ export const authGuard: CanActivateFn = () => {
 /**
  * Réservé à la page de changement obligatoire. Keycloak gère lui-même le
  * changement de mot de passe temporaire sur sa propre page hébergée ; cette
- * route applicative n'est donc plus un passage obligé.
+ * route applicative n'est donc plus un passage obligé, et le contrôle se
+ * réduit à celui de {@link authGuard} — d'où l'alias plutôt qu'un corps recopié.
  */
-export const firstLoginGuard: CanActivateFn = () => {
-  const keycloak = inject(KeycloakService);
-
-  if (!keycloak.isLoggedIn()) {
-    keycloak.login();
-    return false;
-  }
-  return true;
-};
+export const firstLoginGuard: CanActivateFn = authGuard;
 
 /**
  * Restreint une route à certains rôles Keycloak.
@@ -51,10 +44,10 @@ export const roleGuard = (...rolesAutorises: string[]): CanActivateFn => () => {
     return false;
   }
 
-  const userRoles = keycloak.getUserRoles().map(r => r.toLowerCase());
+  const userRoles = new Set(keycloak.getUserRoles().map(r => r.toLowerCase()));
   const hasRole = rolesAutorises.some(role => {
     const r = role.toLowerCase();
-    return userRoles.includes(r) || userRoles.includes(`realm-${r}`);
+    return userRoles.has(r) || userRoles.has(`realm-${r}`);
   });
 
   return hasRole;
@@ -75,8 +68,8 @@ export const afrilandGuard: CanActivateFn = () => {
     return false;
   }
 
-  const userRoles = keycloak.getUserRoles().map(r => r.toLowerCase());
-  if (!userRoles.includes('admin') && !userRoles.includes('realm-admin')) {
+  const userRoles = new Set(keycloak.getUserRoles().map(r => r.toLowerCase()));
+  if (!userRoles.has('admin') && !userRoles.has('realm-admin')) {
     return false;
   }
 

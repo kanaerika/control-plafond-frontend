@@ -4,6 +4,7 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { routes } from './app.routes';
 import { keycloakAuthInterceptor } from './core/keycloak-auth.interceptor';
 import { authExpirationInterceptor } from './core/auth-expiration.interceptor';
+import { erreurHttpInterceptor } from './core/erreur-http.interceptor';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 import { KeycloakService, KeycloakEventTypeLegacy } from 'keycloak-angular';
 import { keycloakConfig, initOptions } from './core/keycloak.config';
@@ -70,7 +71,9 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
-    provideHttpClient(withInterceptors([keycloakAuthInterceptor, authExpirationInterceptor])),
+    // erreurHttpInterceptor en dernier : c'est lui qui voit la réponse en premier
+    // au retour, les autres reçoivent l'erreur déjà normalisée.
+    provideHttpClient(withInterceptors([keycloakAuthInterceptor, authExpirationInterceptor, erreurHttpInterceptor])),
     provideCharts(withDefaultRegisterables()),
     KeycloakService,
     {

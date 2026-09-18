@@ -288,8 +288,8 @@ export class LayoutComponent implements OnDestroy {
   }
 
   get estAdmin(): boolean {
-    const roles = this.keycloak.getUserRoles().map(r => r.toLowerCase());
-    return roles.includes('admin') || roles.includes('realm-admin');
+    const roles = new Set(this.keycloak.getUserRoles().map(r => r.toLowerCase()));
+    return roles.has('admin') || roles.has('realm-admin');
   }
 
   get nomAgent(): string { return this.profil()?.nomComplet ?? this.tr.t('layout.agentParDefaut'); }

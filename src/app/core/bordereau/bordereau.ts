@@ -88,12 +88,16 @@ export function imprimerBordereau(t: Transfert): void {
 </body>
 </html>`;
  
-  const fenetre = window.open('', '_blank', 'width=820,height=900');
+  // document.write() est déprécié : le document est servi via une URL blob, que
+  // la fenêtre charge normalement — le <script> d'impression intégré s'exécute
+  // donc comme avant. L'URL est libérée une fois le chargement terminé.
+  const url = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+  const fenetre = window.open(url, '_blank', 'width=820,height=900');
   if (!fenetre) {
+    URL.revokeObjectURL(url);
     alert("Veuillez autoriser les fenêtres pop-up pour imprimer le bordereau.");
     return;
   }
-  fenetre.document.write(html);
-  fenetre.document.close();
+  fenetre.addEventListener('load', () => URL.revokeObjectURL(url), { once: true });
 }
  

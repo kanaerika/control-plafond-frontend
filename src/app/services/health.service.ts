@@ -11,7 +11,7 @@ export interface HealthResponse {
   providedIn: 'root',
 })
 export class HealthService {
-  constructor(private http: HttpClient) {}
+  constructor(private readonly http: HttpClient) {}
 
   getHealth(): Observable<HealthResponse> {
     return this.http.get<HealthResponse>('/api/health');

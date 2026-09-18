@@ -74,9 +74,11 @@ header p{
 
 /* CARTES */
 
+/* auto-fit : 3 cartes pour un admin partenaire, 4 pour Afriland. Quatre colonnes
+   fixes de 220px minimum débordaient à droite dès 1366px, barre latérale ouverte. */
 .cards{
     display:grid;
-    grid-template-columns:repeat(4,minmax(220px,1fr));
+    grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
     gap:18px;
     margin-bottom:35px;
 }

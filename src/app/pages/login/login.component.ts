@@ -169,8 +169,8 @@ export class LoginComponent implements OnInit {
   }
 
   private routeAccueil(): string {
-    const roles = this.keycloak.getUserRoles().map(r => r.toLowerCase());
-    const isAdmin = roles.includes('admin') || roles.includes('realm-admin');
+    const roles = new Set(this.keycloak.getUserRoles().map(r => r.toLowerCase()));
+    const isAdmin = roles.has('admin') || roles.has('realm-admin');
     return isAdmin ? '/admin/dashboard' : '/app/verification';
   }
 

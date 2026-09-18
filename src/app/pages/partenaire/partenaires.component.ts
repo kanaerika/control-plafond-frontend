@@ -106,7 +106,7 @@ import { Partenaire } from '../../models/models';
 export class PartenairesComponent implements OnInit {
 
   private readonly http = inject(HttpClient);
-  private api = environment.apiUrl + '/superadmin/partenaires';
+  private readonly api = environment.apiUrl + '/superadmin/partenaires';
 
   partenaires: Partenaire[] = [];
   form = { nom: '', email: '', nomAdministrateur: '' };

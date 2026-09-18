@@ -9,7 +9,7 @@ import { environment } from '../environment/environment';
 @Injectable({ providedIn: 'root' })
 export class TransfertService {
   private readonly http = inject(HttpClient);
-  private api = environment.apiUrl;
+  private readonly api = environment.apiUrl;
 
   clientsConnus(q: string) {
     return this.http.get<ClientConnu[]>(`${this.api}/v1/transferts/clients-connus`,

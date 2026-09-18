@@ -100,7 +100,7 @@
   overflow-y: hidden;
 }
 table { width: 100%; border-collapse: collapse; min-width: 600px; }
-.col-actions { white-space: nowrap; }
+.col-actions { white-space: nowrap; text-align: right; }
 
 /* Sous ~1200px la barre latérale ne laisse plus assez de largeur pour les six
    colonnes : on retire « Code », vide dans la quasi-totalité des cas, pour que
@@ -156,7 +156,6 @@ tbody tr:hover { background: var(--gris-clair); }
 .badge.attente    { background: var(--orange-fond); color: var(--orange); }
 .badge.temporaire { background: var(--bleu-fond); color: var(--bleu); }
 
-.col-actions { text-align: right; }
 .actions { display: inline-flex; gap: 6px; }
 .ico {
   width: 32px; height: 32px;

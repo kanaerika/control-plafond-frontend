@@ -230,8 +230,7 @@ export class StatistiquesComponent implements OnInit {
     const lignes: string[] = [];
     lignes.push('Indicateur;Valeur');
     for (const k of d.kpis) lignes.push(`${k.libelle};${k.valeur}`);
-    lignes.push('');
-    lignes.push('Référence;Client;Montant;Statut;Date;Agent');
+    lignes.push('', 'Référence;Client;Montant;Statut;Date;Agent');
     for (const t of d.activiteRecente) {
       lignes.push(`${this.reference(t.id)};${t.nomClient};${t.montant};${this.libelleStatut(t.statut)};${t.date};${t.agentNom}`);
     }

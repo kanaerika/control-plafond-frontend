@@ -81,21 +81,16 @@
   --ombre-modal: 0 24px 60px rgba(0, 0, 0, 0.55);
 }
 
-body {
-  background: var(--fond);
-  color: var(--texte);
-  transition: background-color .2s ease, color .2s ease;
-}
-
-
-
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+/* Une seule regle body : la seconde declaration ecrasait la premiere sur
+   « color », var(--texte) n'etait donc jamais appliquee. */
 body {
   font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
-  color: var(--encre);
   background: var(--fond);
+  color: var(--encre);
   -webkit-font-smoothing: antialiased;
+  transition: background-color .2s ease, color .2s ease;
 }
  
 .disp { font-family: 'Sora', 'Manrope', sans-serif; }

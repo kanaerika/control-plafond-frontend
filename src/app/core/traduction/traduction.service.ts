@@ -325,7 +325,7 @@ export class TraductionService {
     let texte = entree ? entree[this.langue()] : cle;
     if (params) {
       for (const [k, v] of Object.entries(params)) {
-        texte = texte.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v));
+        texte = texte.replace(new RegExp(String.raw`\{${k}\}`, 'g'), String(v));
       }
     }
     return texte;
